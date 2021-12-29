@@ -1,5 +1,5 @@
-﻿// Sontiq XFER.
-// Copyright (C) Sontiq.
+﻿// Zyborg Permissions=based Authorization for ASP.NET Core.
+// Copyright (C) Zyborg.
 
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;

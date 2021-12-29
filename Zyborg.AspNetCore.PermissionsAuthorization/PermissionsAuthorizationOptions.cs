@@ -1,5 +1,5 @@
-﻿// Sontiq XFER.
-// Copyright (C) Sontiq.
+﻿// Zyborg Permissions=based Authorization for ASP.NET Core.
+// Copyright (C) Zyborg.
 
 using System.Security.Claims;
 
@@ -7,5 +7,5 @@ namespace Zyborg.AspNetCore.PermissionsAuthorization;
 
 public class PermissionsAuthorizationOptions
 {
-    public Func<IServiceProvider, ClaimsPrincipal, Task<HashSet<string>>>? PermissionsResolver { get; set;}
+    //public Func<IServiceProvider, ClaimsPrincipal, Task<HashSet<string>>>? PermissionsResolver { get; set; }
 }
