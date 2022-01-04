@@ -5,7 +5,7 @@ using System.Security.Claims;
 
 namespace Zyborg.AspNetCore.PermissionsAuthorization;
 
-public interface IPermissionsResolver
+public interface IResourcePermittedResolver
 {
-    Task<ISet<string>> GetPermissionsAsync(ClaimsPrincipal user);
+    Task<bool> IsPermitted(Type resourceType, ClaimsPrincipal user);
 }

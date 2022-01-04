@@ -8,10 +8,9 @@ namespace Zyborg.AspNetCore.PermissionsAuthorization;
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class PermitAttribute : AuthorizeAttribute
 {
-    internal const string HasPermissionsPolicy = $"__{nameof(HasPermissionsPolicy)}__";
 
     public PermitAttribute(params string[] requiredPermissions)
-        : base(policy: HasPermissionsPolicy)
+        : base(policy: UserIsPermittedRequirement.UserIsPermittedPolicy)
     {
         RequiredPermissions = requiredPermissions;
     }
