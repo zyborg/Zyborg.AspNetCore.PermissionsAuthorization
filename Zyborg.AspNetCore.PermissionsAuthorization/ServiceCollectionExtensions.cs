@@ -26,27 +26,40 @@ public static class ServiceCollectionExtensions
     /// <param name="optionsConfigure"></param>
     /// <returns></returns>
     public static IServiceCollection AddPermissionsAuthorization(this IServiceCollection services,
-        Func<IServiceProvider, IPermissionsResolver> resolverFactory,
+        Func<IServiceProvider, IUserPermissionsResolver> resolverFactory,
+        Func<IServiceProvider, IResourcePermittedResolver>? resourcePermittedResolverFactory = null,
         Action<PermissionsAuthorizationOptions>? optionsConfigure = null)
     {
-        services.AddPermissionsResolver(resolverFactory);
         services.AddPermissionsAuthorizationHandler(optionsConfigure);
+        services.AddPermissionsResolver(resolverFactory);
+        if (resourcePermittedResolverFactory != null)
+        {
+            services.AddResourcePermittedResolver(resourcePermittedResolverFactory);
+        }
         services.AddAuthorization(options => options.AddPermissionsAuthorizationPolicy());
 
         return services;
     }
 
     static IServiceCollection AddPermissionsResolver(this IServiceCollection services,
-        Func<IServiceProvider, IPermissionsResolver> resolverFactory)
+        Func<IServiceProvider, IUserPermissionsResolver> resolverFactory)
     {
-        services.AddScoped<IPermissionsResolver>(services => resolverFactory(services));
+        services.AddScoped<IUserPermissionsResolver>(services => resolverFactory(services));
+
+        return services;
+    }
+    static IServiceCollection AddResourcePermittedResolver(this IServiceCollection services,
+        Func<IServiceProvider, IResourcePermittedResolver> resolverFactory)
+    {
+        services.AddScoped<IResourcePermittedResolver>(services => resolverFactory(services));
 
         return services;
     }
 
-    static IServiceCollection AddPermissionsAuthorizationHandler(this IServiceCollection services,
+    public static IServiceCollection AddPermissionsAuthorizationHandler(this IServiceCollection services,
         Action<PermissionsAuthorizationOptions>? optionsConfigure = null)
     {
+        services.AddScoped<PermissionsContext>();
         services.AddSingleton<PermissionsAuthorizationOptions>(services =>
         {
             var options = new PermissionsAuthorizationOptions();
@@ -61,11 +74,11 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    static AuthorizationOptions AddPermissionsAuthorizationPolicy(this AuthorizationOptions options)
+    public static AuthorizationOptions AddPermissionsAuthorizationPolicy(this AuthorizationOptions options)
     {
-        options.AddPolicy(PermitAttribute.HasPermissionsPolicy, policyBuilder =>
+        options.AddPolicy(UserIsPermittedRequirement.UserIsPermittedPolicy, policyBuilder =>
         {
-            policyBuilder.Requirements.Add(HasPermissionsRequirement.Instance);
+            policyBuilder.Requirements.Add(UserIsPermittedRequirement.Instance);
         });
 
         return options;

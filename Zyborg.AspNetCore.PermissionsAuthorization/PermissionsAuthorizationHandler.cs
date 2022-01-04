@@ -2,8 +2,9 @@
 // Copyright (C) Zyborg.
 
 using System.Reflection;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using BlazorRouteData = Microsoft.AspNetCore.Components.RouteData;
@@ -23,30 +24,21 @@ public class PermissionsAuthorizationHandler : IAuthorizationHandler
         _logger = logger;
         _scopeFactory = scopeFactory;
         _options = options;
+
+        _logger.LogTrace("CREATED Perms Authz Handler");
     }
 
     public async Task HandleAsync(AuthorizationHandlerContext context)
     {
-        if (context.PendingRequirements.Contains(HasPermissionsRequirement.Instance))
+        if (context.PendingRequirements.Contains(UserIsPermittedRequirement.Instance))
         {
             if (context.Resource is BlazorRouteData routeData)
             {
                 using var scope = _scopeFactory.CreateScope();
-
-                var user = context.User;
-                var resolver = scope.ServiceProvider.GetRequiredService<IPermissionsResolver>();
-                var perms = await resolver.GetPermissionsAsync(user);
-
-                //_logger.LogInformation($"Acceptable Permissions combinations for Target:  [{routeData.PageType.FullName}]:");
-                foreach (var aa in routeData.PageType.GetCustomAttributes<PermitAttribute>(true))
+                var pctx = scope.ServiceProvider.GetRequiredService<PermissionsContext>();
+                if (await pctx.IsPermittedAsync(routeData.PageType, context.User))
                 {
-                    //_logger.LogInformation($"  * Allow for: {string.Join(",", aa.RequiredPermissions)}");
-
-                    if (aa.RequiredPermissions.All(rp => perms.Contains(rp)))
-                    {
-                        context.Succeed(HasPermissionsRequirement.Instance);
-                        break;
-                    }
+                    context.Succeed(UserIsPermittedRequirement.Instance);
                 }
             }
             else
