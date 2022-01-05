@@ -7,5 +7,5 @@ namespace Zyborg.AspNetCore.PermissionsAuthorization;
 
 public interface IResourcePermittedResolver
 {
-    Task<bool> IsPermitted(Type resourceType, ClaimsPrincipal user);
+    Task<bool> IsPermitted(PermissionsContext context, Type resourceType, ClaimsPrincipal user);
 }

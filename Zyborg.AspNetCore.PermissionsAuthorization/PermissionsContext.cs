@@ -29,37 +29,15 @@ public class PermissionsContext
         _logger.LogTrace("CREATED Perms Context");
     }
 
-    public Task<bool> IsPermittedAsync<TResource>(ClaimsPrincipal user) =>
-        IsPermittedAsync(typeof(TResource), user);
-
-    public async Task<bool> IsPermittedAsync(Type resourceType, ClaimsPrincipal user)
+    public async Task<bool> HasPermissionsAsync(ClaimsPrincipal user, params string[] permissions)
     {
-        if (resourceType.GetCustomAttribute<PermitConditionAttribute>() != null)
-        {
-            return await ResolveIsPermittedAsync(resourceType, user);
-        }
-
-        var permitAttributes = resourceType.GetCustomAttributes<PermitAttribute>()?.ToArray();
-        if (permitAttributes != null && permitAttributes.Length > 0)
-        {
-            var userPerms = await GetPermissionsAsync(user);
-            foreach (var aa in permitAttributes)
-            {
-                if (aa.RequiredPermissions.All(rp => userPerms.Contains(rp)))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        return true;
+        var perms = await GetPermissionsAsync(user);
+        return permissions.All(p => perms.Contains(p));
     }
 
-    public async Task<ISet<string>> GetPermissionsAsync(ClaimsPrincipal? user)
+    public async Task<ISet<string>> GetPermissionsAsync(ClaimsPrincipal user)
     {
-        if (user == null || user == _httpAccessor.HttpContext?.User)
+        if (user == _httpAccessor.HttpContext?.User)
         {
             if (_options.CachePermissionsPerHttpContext)
             {
@@ -100,13 +78,5 @@ public class PermissionsContext
 
         var resolver = scope.ServiceProvider.GetRequiredService<IUserPermissionsResolver>();
         return await resolver.GetPermissionsAsync(user);
-    }
-
-    private async Task<bool> ResolveIsPermittedAsync(Type resourceType, ClaimsPrincipal user)
-    {
-        _logger.LogInformation("Resolving is permitted for target user and resource: " + resourceType.Name);
-        using var scope = _scopeFactory.CreateScope();
-        var resolver = scope.ServiceProvider.GetRequiredService<IResourcePermittedResolver>();
-        return await resolver.IsPermitted(resourceType, user);
     }
 }

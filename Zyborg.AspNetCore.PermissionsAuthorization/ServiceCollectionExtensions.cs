@@ -60,6 +60,7 @@ public static class ServiceCollectionExtensions
         Action<PermissionsAuthorizationOptions>? optionsConfigure = null)
     {
         services.AddScoped<PermissionsContext>();
+        services.AddScoped<PermissionsHelper>();
         services.AddSingleton<PermissionsAuthorizationOptions>(services =>
         {
             var options = new PermissionsAuthorizationOptions();
